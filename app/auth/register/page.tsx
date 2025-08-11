@@ -61,21 +61,42 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords don't match!")
       return
     }
+    
     if (!formData.agreeToTerms) {
       alert("Please agree to the terms and conditions")
       return
     }
+    
     setIsLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
+    
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed')
+      }
+      
       // Redirect to dashboard after successful registration
-      router.push("/dashboard")
-    }, 1000)
+      router.push('/dashboard')
+    } catch (error: any) {
+      console.error('Registration error:', error)
+      alert(error.message || 'Registration failed. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleInputChange = (field: string, value: string | boolean) => {
