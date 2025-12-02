@@ -12,6 +12,8 @@ import { Separator } from "@/components/ui/separator"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff, Mail, Lock, User, Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
+import { setSessionUser } from "@/lib/auth/session"
+import { showToast } from "@/lib/toast/toastHelper"
 
 function AuthNavigation() {
   const { theme, setTheme } = useTheme()
@@ -62,13 +64,19 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Validate password length
+    if (formData.password.length < 8) {
+      showToast.warning("Password must be at least 8 characters long")
+      return
+    }
+    
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!")
+      showToast.warning("Passwords don't match!")
       return
     }
     
     if (!formData.agreeToTerms) {
-      alert("Please agree to the terms and conditions")
+      showToast.warning("Please agree to the terms and conditions")
       return
     }
     
@@ -89,11 +97,16 @@ export default function RegisterPage() {
         throw new Error(data.error || 'Registration failed')
       }
       
+      showToast.success("Account created successfully!")
+      
+      // Store user session
+      setSessionUser(data.user)
+      
       // Redirect to dashboard after successful registration
       router.push('/dashboard')
     } catch (error: any) {
       console.error('Registration error:', error)
-      alert(error.message || 'Registration failed. Please try again.')
+      showToast.error(error.message || 'Registration failed. Please try again.')
     } finally {
       setIsLoading(false)
     }

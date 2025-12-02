@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db/mongodb';
-import User from '@/models/User';
+import { authController } from '@/lib/controllers/authController';
 
 export async function POST(request: Request) {
   try {
@@ -25,31 +25,14 @@ export async function POST(request: Request) {
     // Connect to database
     await dbConnect();
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'Email already in use' },
-        { status: 400 }
-      );
-    }
-
-    // Create new user
-    const user = new User({
-      firstName,
-      lastName,
-      email,
-      password, // Password will be hashed by the pre-save hook
-    });
-
-    await user.save();
+    // Register user using controller
+    const user = await authController.register(firstName, lastName, email, password);
 
     // Return success response without sensitive data
-    const { password: _, ...userWithoutPassword } = user.toObject();
     return NextResponse.json(
       { 
         message: 'User registered successfully',
-        user: userWithoutPassword 
+        user,
       },
       { status: 201 }
     );
@@ -58,10 +41,9 @@ export async function POST(request: Request) {
     console.error('Registration error:', error);
     return NextResponse.json(
       { 
-        error: 'Registration failed',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined 
+        error: error.message || 'Registration failed',
       },
-      { status: 500 }
+      { status: 400 }
     );
   }
 }

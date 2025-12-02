@@ -11,6 +11,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from "@/components/ui/separator"
 import { Eye, EyeOff, Mail, Lock, Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
+import { setSessionUser } from "@/lib/auth/session"
+import { showToast } from "@/lib/toast/toastHelper"
 
 function AuthNavigation() {
   const { theme, setTheme } = useTheme()
@@ -53,13 +55,50 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate email format
+    const emailRegex = /^\S+@\S+\.\S+$/
+    if (!emailRegex.test(email)) {
+      showToast.warning("Please enter a valid email address")
+      return
+    }
+    
+    // Validate password length
+    if (password.length < 8) {
+      showToast.warning("Password must be at least 8 characters long")
+      return
+    }
+    
     setIsLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
+    
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed')
+      }
+
+      showToast.success("Login successful!")
+      
+      // Store user session
+      setSessionUser(data.user)
+
       // Redirect to dashboard after successful login
       router.push("/dashboard")
-    }, 1000)
+    } catch (error: any) {
+      console.error('Login error:', error)
+      showToast.error(error.message || 'Login failed. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

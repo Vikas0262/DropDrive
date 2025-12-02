@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, ArrowLeft, CheckCircle, Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
+import { showToast } from "@/lib/toast/toastHelper"
 
 function AuthNavigation() {
   const { theme, setTheme } = useTheme()
@@ -48,15 +49,46 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isEmailSent, setIsEmailSent] = useState(false)
+  const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    // Simulate API call
-    setTimeout(() => {
+    setError("")
+
+    // Validate email format
+    const emailRegex = /^\S+@\S+\.\S+$/
+    if (!emailRegex.test(email)) {
+      showToast.warning("Please enter a valid email address")
       setIsLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch("/api/auth/forgot", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to process request")
+      }
+
+      showToast.success("Reset link sent to your email!")
       setIsEmailSent(true)
-    }, 1000)
+    } catch (error: any) {
+      console.error("Forgot password error:", error)
+      const errorMsg = error.message || "Failed to send reset link. Please try again."
+      setError(errorMsg)
+      showToast.error(errorMsg)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (isEmailSent) {
@@ -118,6 +150,11 @@ export default function ForgotPasswordPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {error && (
+                <div className="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100 rounded-md text-sm">
+                  {error}
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
