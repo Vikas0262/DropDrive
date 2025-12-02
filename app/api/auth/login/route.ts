@@ -20,17 +20,20 @@ export async function POST(request: Request) {
     // Login user
     const user = await authController.login(email, password);
 
+    // Remove profilePicture from response to avoid headers too big error
+    const { profilePicture: _, ...userWithoutImage } = user;
+
     // Create response with user data
     const response = NextResponse.json(
       {
         message: 'Login successful',
-        user,
+        user: userWithoutImage,
       },
       { status: 200 }
     );
 
-    // Set user session cookie
-    response.cookies.set('user', JSON.stringify(user), {
+    // Set user session cookie (without large profilePicture)
+    response.cookies.set('user', JSON.stringify(userWithoutImage), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

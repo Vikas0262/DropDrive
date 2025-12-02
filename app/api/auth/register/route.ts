@@ -28,11 +28,14 @@ export async function POST(request: Request) {
     // Register user using controller
     const user = await authController.register(firstName, lastName, email, password);
 
+    // Remove profilePicture from response to avoid headers too big error
+    const { profilePicture: _, ...userWithoutImage } = user;
+
     // Return success response without sensitive data
     return NextResponse.json(
       { 
         message: 'User registered successfully',
-        user,
+        user: userWithoutImage,
       },
       { status: 201 }
     );

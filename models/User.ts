@@ -7,6 +7,7 @@ interface IUser extends Document {
   lastName: string;
   email: string;
   password: string;
+  profilePicture?: string; // Base64 encoded image
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   createdAt: Date;
@@ -39,6 +40,10 @@ const userSchema = new Schema<IUser>(
       required: [true, 'Password is required'],
       minlength: [8, 'Password must be at least 8 characters long'],
       select: false,
+    },
+    profilePicture: {
+      type: String,
+      default: null,
     },
     resetPasswordToken: {
       type: String,

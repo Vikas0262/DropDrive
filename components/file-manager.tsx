@@ -35,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useTheme } from "next-themes"
+import { getSessionUser } from "@/lib/auth/session"
 
 // Sample file data
 const files = [
@@ -246,6 +247,68 @@ function DesktopSidebar() {
 
 function TopNavigation({ onNavigate, onLogout }: FileManagerProps) {
   const { theme, setTheme } = useTheme()
+  const [user, setUser] = React.useState<any>(null)
+  const [profilePicture, setProfilePicture] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    const userData = getSessionUser()
+    if (userData) {
+      setUser(userData)
+      // Fetch profile picture separately
+      if (userData._id) {
+        fetchProfilePicture(userData._id)
+      }
+    }
+
+    // Listen for storage changes
+    const handleStorageChange = () => {
+      const updatedUserData = getSessionUser()
+      if (updatedUserData) {
+        setUser(updatedUserData)
+        if (updatedUserData._id) {
+          fetchProfilePicture(updatedUserData._id)
+        }
+      }
+    }
+
+    // Listen for custom event (for same-tab updates)
+    const handleUserUpdate = () => {
+      const updatedUserData = getSessionUser()
+      if (updatedUserData) {
+        setUser(updatedUserData)
+        if (updatedUserData._id) {
+          fetchProfilePicture(updatedUserData._id)
+        }
+      }
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+    window.addEventListener("userUpdated", handleUserUpdate)
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+      window.removeEventListener("userUpdated", handleUserUpdate)
+    }
+  }, [])
+
+  const fetchProfilePicture = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/auth/profile?userId=${userId}&includeImage=true`)
+      const data = await response.json()
+      if (data.user?.profilePicture) {
+        setProfilePicture(data.user.profilePicture)
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile picture:', error)
+    }
+  }
+
+  const getInitials = (firstName?: string, lastName?: string) => {
+    if (!firstName && !lastName) return "U"
+    const first = firstName?.[0]?.toUpperCase() || ""
+    const last = lastName?.[0]?.toUpperCase() || ""
+    return (first + last).slice(0, 2)
+  }
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -283,17 +346,21 @@ function TopNavigation({ onNavigate, onLogout }: FileManagerProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 md:h-9 md:w-9 rounded-full">
-                <Avatar className="h-7 w-7 md:h-8 md:w-8">
-                  <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-                  <AvatarFallback>JD</AvatarFallback>
+                <Avatar className="h-7 w-7 md:h-8 md:w-8 bg-gradient-to-br from-blue-500 to-teal-500">
+                  {profilePicture && (
+                    <AvatarImage src={profilePicture} alt={user?.firstName} />
+                  )}
+                  <AvatarFallback className="text-white font-semibold text-sm">
+                    {getInitials(user?.firstName, user?.lastName)}
+                  </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <div className="flex items-center justify-start gap-2 p-2">
                 <div className="flex flex-col space-y-1 leading-none">
-                  <p className="font-medium">John Doe</p>
-                  <p className="w-[200px] truncate text-sm text-muted-foreground">john.doe@example.com</p>
+                  <p className="font-medium">{user?.firstName} {user?.lastName}</p>
+                  <p className="w-[200px] truncate text-sm text-muted-foreground">{user?.email}</p>
                 </div>
               </div>
               <DropdownMenuSeparator />
