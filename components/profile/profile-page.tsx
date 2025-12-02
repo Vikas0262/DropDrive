@@ -35,11 +35,17 @@ interface ProfilePageProps {
 function ProfileNavigation({ onNavigate, onLogout }: ProfilePageProps) {
   const { theme, setTheme } = useTheme()
   const [user, setUser] = React.useState<any>(null)
+  const [profilePicture, setProfilePicture] = React.useState<string | null>(null)
+  const [isLoadingImage, setIsLoadingImage] = React.useState(false)
 
   React.useEffect(() => {
     const userData = getSessionUser()
     if (userData) {
       setUser(userData)
+      // Fetch profile picture if user exists
+      if (userData._id) {
+        fetchProfilePicture(userData._id)
+      }
     }
 
     // Listen for user updates
@@ -47,12 +53,31 @@ function ProfileNavigation({ onNavigate, onLogout }: ProfilePageProps) {
       const updatedUserData = getSessionUser()
       if (updatedUserData) {
         setUser(updatedUserData)
+        // Refresh profile picture when user is updated
+        if (updatedUserData._id) {
+          fetchProfilePicture(updatedUserData._id)
+        }
       }
     }
 
     window.addEventListener("userUpdated", handleUserUpdate)
     return () => window.removeEventListener("userUpdated", handleUserUpdate)
   }, [])
+
+  const fetchProfilePicture = async (userId: string) => {
+    try {
+      setIsLoadingImage(true)
+      const response = await fetch(`/api/auth/profile?userId=${userId}&includeImage=true`)
+      const data = await response.json()
+      if (data.user?.profilePicture) {
+        setProfilePicture(data.user.profilePicture)
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile picture:', error)
+    } finally {
+      setIsLoadingImage(false)
+    }
+  }
 
   const getInitials = (firstName?: string, lastName?: string) => {
     if (!firstName && !lastName) return "U"
@@ -95,8 +120,8 @@ function ProfileNavigation({ onNavigate, onLogout }: ProfilePageProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 md:h-9 md:w-9 rounded-full">
                 <Avatar className="h-7 w-7 md:h-8 md:w-8 bg-gradient-to-br from-blue-500 to-teal-500">
-                  {user?.profilePicture && (
-                    <AvatarImage src={user.profilePicture} alt={user.firstName} />
+                  {profilePicture && !isLoadingImage && (
+                    <AvatarImage src={profilePicture} alt={user?.firstName} />
                   )}
                   <AvatarFallback className="text-white font-semibold text-sm">
                     {getInitials(user?.firstName, user?.lastName)}
@@ -106,9 +131,17 @@ function ProfileNavigation({ onNavigate, onLogout }: ProfilePageProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <div className="flex items-center justify-start gap-2 p-2">
+                <Avatar className="h-10 w-10 bg-gradient-to-br from-blue-500 to-teal-500">
+                  {profilePicture && !isLoadingImage && (
+                    <AvatarImage src={profilePicture} alt={user?.firstName} />
+                  )}
+                  <AvatarFallback className="text-white font-semibold">
+                    {getInitials(user?.firstName, user?.lastName)}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex flex-col space-y-1 leading-none">
                   <p className="font-medium">{user?.firstName} {user?.lastName}</p>
-                  <p className="w-[200px] truncate text-sm text-muted-foreground">{user?.email}</p>
+                  <p className="w-[140px] truncate text-sm text-muted-foreground">{user?.email}</p>
                 </div>
               </div>
               <DropdownMenuSeparator />

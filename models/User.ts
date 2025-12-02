@@ -7,7 +7,8 @@ interface IUser extends Document {
   lastName: string;
   email: string;
   password: string;
-  profilePicture?: string; // Base64 encoded image
+  profilePicture?: string; // Cloudinary URL
+  cloudinaryProfilePictureId?: string; // Cloudinary public ID for deletion
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   createdAt: Date;
@@ -42,6 +43,10 @@ const userSchema = new Schema<IUser>(
       select: false,
     },
     profilePicture: {
+      type: String,
+      default: null,
+    },
+    cloudinaryProfilePictureId: {
       type: String,
       default: null,
     },

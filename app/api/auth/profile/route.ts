@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db/mongodb';
 import User from '@/models/User';
+import { uploadImageToCloudinary, deleteImageFromCloudinary } from '@/lib/cloudinary/cloudinarySetup';
 
 export async function GET(request: Request) {
   try {
@@ -80,12 +81,54 @@ export async function PUT(request: Request) {
     // Update fields
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
-    if (profilePicture !== undefined) user.profilePicture = profilePicture;
+    
+    // Handle profile picture upload to Cloudinary
+    if (profilePicture !== undefined) {
+      if (profilePicture === null) {
+        // Delete old profile picture from Cloudinary if exists
+        if (user.cloudinaryProfilePictureId) {
+          try {
+            await deleteImageFromCloudinary(user.cloudinaryProfilePictureId);
+          } catch (error) {
+            console.error('Failed to delete old profile picture:', error);
+          }
+        }
+        user.profilePicture = null;
+        user.cloudinaryProfilePictureId = null;
+      } else if (profilePicture) {
+        // Upload new profile picture to Cloudinary
+        try {
+          const uploadResult = await uploadImageToCloudinary(
+            profilePicture,
+            'UserProfile',
+            userId,
+            'profile_picture'
+          );
+          
+          // Delete old profile picture if exists
+          if (user.cloudinaryProfilePictureId) {
+            try {
+              await deleteImageFromCloudinary(user.cloudinaryProfilePictureId);
+            } catch (error) {
+              console.error('Failed to delete old profile picture:', error);
+            }
+          }
+          
+          user.profilePicture = uploadResult.url;
+          user.cloudinaryProfilePictureId = uploadResult.publicId;
+        } catch (error: any) {
+          return NextResponse.json(
+            { error: `Failed to upload image: ${error.message}` },
+            { status: 500 }
+          );
+        }
+      }
+    }
 
     await user.save();
 
     const userObj = user.toObject();
-    const { password: _, profilePicture: __, ...userWithoutSensitiveData } = userObj;
+    const { password: _, profilePicture: __, cloudinaryProfilePictureId: ___, ...userWithoutSensitiveData } = userObj;
 
     return NextResponse.json(
       {
