@@ -9,6 +9,9 @@ interface IUser extends Document {
   password: string;
   profilePicture?: string; // Cloudinary URL
   cloudinaryProfilePictureId?: string; // Cloudinary public ID for deletion
+  googleId?: string; // Google OAuth ID
+  githubId?: string; // GitHub OAuth ID
+  authProvider?: 'local' | 'google' | 'github'; // Authentication provider
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   createdAt: Date;
@@ -49,6 +52,21 @@ const userSchema = new Schema<IUser>(
     cloudinaryProfilePictureId: {
       type: String,
       default: null,
+    },
+    googleId: {
+      type: String,
+      default: null,
+      sparse: true, // Allow multiple null values but unique non-null values
+    },
+    githubId: {
+      type: String,
+      default: null,
+      sparse: true, // Allow multiple null values but unique non-null values
+    },
+    authProvider: {
+      type: String,
+      enum: ['local', 'google', 'github'],
+      default: 'local',
     },
     resetPasswordToken: {
       type: String,
