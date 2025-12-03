@@ -42,6 +42,8 @@ export const setSessionUser = (user: SessionUser) => {
 
   try {
     localStorage.setItem('user', JSON.stringify(user));
+    // Dispatch custom event for real-time updates
+    window.dispatchEvent(new CustomEvent('userUpdated', { detail: user }));
   } catch (error) {
     console.error('Failed to store session user:', error);
   }
@@ -57,6 +59,7 @@ export const clearSession = () => {
 
   try {
     localStorage.removeItem('user');
+    window.dispatchEvent(new CustomEvent('userUpdated'));
   } catch (error) {
     console.error('Failed to clear session:', error);
   }
@@ -68,3 +71,12 @@ export const clearSession = () => {
 export const isAuthenticated = (): boolean => {
   return getSessionUser() !== null;
 };
+
+/**
+ * Get user ID from session for API calls
+ */
+export const getUserIdForAPI = (): string | null => {
+  const user = getSessionUser();
+  return user?._id || null;
+};
+

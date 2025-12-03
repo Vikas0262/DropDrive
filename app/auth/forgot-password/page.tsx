@@ -93,10 +93,10 @@ export default function ForgotPasswordPage() {
 
   if (isEmailSent) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background" suppressHydrationWarning>
         <AuthNavigation />
 
-        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
+        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4" suppressHydrationWarning>
           <div className="w-full max-w-md">
             <Card className="shadow-lg">
               <CardHeader className="text-center pb-4">
@@ -130,10 +130,10 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" suppressHydrationWarning>
       <AuthNavigation />
 
-      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4" suppressHydrationWarning>
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-2">Forgot your password?</h1>
@@ -149,13 +149,13 @@ export default function ForgotPasswordPage() {
                 Enter your email address and we'll send you a reset link
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent suppressHydrationWarning>
               {error && (
                 <div className="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100 rounded-md text-sm">
                   {error}
                 </div>
               )}
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" suppressHydrationWarning>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">

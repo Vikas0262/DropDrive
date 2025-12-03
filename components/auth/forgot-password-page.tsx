@@ -63,10 +63,10 @@ export function ForgotPasswordPage({ onNavigate }: ForgotPasswordPageProps) {
 
   if (isEmailSent) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background" suppressHydrationWarning>
         <AuthNavigation />
 
-        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
+        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4" suppressHydrationWarning>
           <div className="w-full max-w-md">
             <Card className="shadow-lg">
               <CardHeader className="text-center pb-4">
@@ -100,10 +100,10 @@ export function ForgotPasswordPage({ onNavigate }: ForgotPasswordPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" suppressHydrationWarning>
       <AuthNavigation />
 
-      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4" suppressHydrationWarning>
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-2">Forgot your password?</h1>
@@ -120,7 +120,7 @@ export function ForgotPasswordPage({ onNavigate }: ForgotPasswordPageProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" suppressHydrationWarning>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">

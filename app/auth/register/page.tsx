@@ -117,10 +117,10 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" suppressHydrationWarning>
       <AuthNavigation />
 
-      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4" suppressHydrationWarning>
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-2">Create your account</h1>
@@ -132,8 +132,8 @@ export default function RegisterPage() {
               <CardTitle className="text-2xl font-semibold text-center">Sign Up</CardTitle>
               <CardDescription className="text-center">Fill in your information to get started</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <form onSubmit={handleSubmit} className="space-y-4">
+            <CardContent className="space-y-4" suppressHydrationWarning>
+              <form onSubmit={handleSubmit} className="space-y-4" suppressHydrationWarning>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
@@ -297,8 +297,8 @@ export default function RegisterPage() {
                 </Button>
               </div>
             </CardContent>
-            <CardFooter>
-              <div className="text-center text-sm text-muted-foreground w-full">
+            <CardFooter suppressHydrationWarning>
+              <div className="text-center text-sm text-muted-foreground w-full" suppressHydrationWarning>
                 Already have an account?{" "}
                 <Button variant="link" className="px-0 text-sm font-medium" onClick={() => router.push("/auth/login")}>
                   Sign in

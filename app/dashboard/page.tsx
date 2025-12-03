@@ -16,7 +16,7 @@ export default function DashboardPage() {
     router.push("/auth/login")
   }
 
-  const handleFileView = (fileId: number) => {
+  const handleFileView = (fileId: string) => {
     router.push(`/file/${fileId}`)
   }
 

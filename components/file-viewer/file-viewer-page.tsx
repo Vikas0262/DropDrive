@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -36,8 +36,15 @@ import {
   User,
   Settings,
   LogOut,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize,
+  Minimize,
 } from "lucide-react"
 import { useTheme } from "next-themes"
+import { getSessionUser } from "@/lib/auth/session"
 import { ShareModal } from "./share-modal"
 
 // Sample file data (in a real app, this would come from an API)
@@ -98,39 +105,253 @@ const files = [
   },
 ]
 
+function VideoPlayer({ fileUrl, fileName }: { fileUrl: string; fileName: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [isMuted, setIsMuted] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [volume, setVolume] = useState(1)
+  const [showControls, setShowControls] = useState(true)
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const handlePlayPause = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause()
+      } else {
+        videoRef.current.play()
+      }
+      setIsPlaying(!isPlaying)
+    }
+  }
+
+  const handleMuteToggle = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted
+      setIsMuted(!isMuted)
+    }
+  }
+
+  const handleVolumeChange = (newVolume: number) => {
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume
+      setVolume(newVolume)
+      if (newVolume > 0 && isMuted) {
+        videoRef.current.muted = false
+        setIsMuted(false)
+      }
+    }
+  }
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime)
+    }
+  }
+
+  const handleDurationChange = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration)
+    }
+  }
+
+  const handleSeek = (newTime: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = newTime
+      setCurrentTime(newTime)
+    }
+  }
+
+  const handleFullscreen = async () => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`)
+      })
+      setIsFullscreen(true)
+    } else {
+      document.exitFullscreen()
+      setIsFullscreen(false)
+    }
+  }
+
+  const formatTime = (seconds: number) => {
+    if (!seconds || isNaN(seconds)) return "0:00"
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, "0")}`
+  }
+
+  const handleMouseMove = () => {
+    setShowControls(true)
+    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current)
+    if (isPlaying) {
+      controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000)
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current)
+    }
+  }, [])
+
+  return (
+    <div
+      ref={containerRef}
+      className="w-full bg-black rounded-lg overflow-hidden group relative"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => isPlaying && setShowControls(false)}
+    >
+      <video
+        ref={videoRef}
+        src={fileUrl}
+        className="w-full h-auto max-h-96 cursor-pointer"
+        onClick={handlePlayPause}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleDurationChange}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+      />
+
+      {/* Play Button Overlay */}
+      {!isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
+          <button
+            onClick={handlePlayPause}
+            className="bg-white/80 hover:bg-white rounded-full p-4 transition-all transform hover:scale-110"
+          >
+            <Play className="h-8 w-8 text-black fill-black" />
+          </button>
+        </div>
+      )}
+
+      {/* Video Controls */}
+      <div
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent p-4 transition-opacity duration-300 ${
+          showControls || !isPlaying ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        {/* Progress Bar */}
+        <div className="mb-3 flex items-center gap-2">
+          <input
+            type="range"
+            min="0"
+            max={duration || 0}
+            value={currentTime}
+            onChange={(e) => handleSeek(Number(e.target.value))}
+            className="flex-1 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-white"
+            style={{
+              background: `linear-gradient(to right, white 0%, white ${
+                (currentTime / duration) * 100
+              }%, rgb(75 85 99) ${(currentTime / duration) * 100}%, rgb(75 85 99) 100%)`,
+            }}
+          />
+        </div>
+
+        {/* Control Buttons */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            {/* Play/Pause */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-white hover:bg-white/20"
+              onClick={handlePlayPause}
+            >
+              {isPlaying ? (
+                <Pause className="h-4 w-4 fill-white" />
+              ) : (
+                <Play className="h-4 w-4 fill-white" />
+              )}
+            </Button>
+
+            {/* Volume Control */}
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white hover:bg-white/20"
+                onClick={handleMuteToggle}
+              >
+                {isMuted || volume === 0 ? (
+                  <VolumeX className="h-4 w-4" />
+                ) : (
+                  <Volume2 className="h-4 w-4" />
+                )}
+              </Button>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={isMuted ? 0 : volume}
+                onChange={(e) => handleVolumeChange(Number(e.target.value))}
+                className="w-16 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-white hidden sm:block"
+              />
+            </div>
+
+            {/* Time Display */}
+            <div className="text-white text-xs font-medium ml-2 hidden sm:block">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </div>
+          </div>
+
+          {/* Fullscreen Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-white hover:bg-white/20"
+            onClick={handleFullscreen}
+          >
+            {isFullscreen ? (
+              <Minimize className="h-4 w-4" />
+            ) : (
+              <Maximize className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 interface FileViewerPageProps {
-  fileId: number | null
+  fileId: string | null
   onNavigate: (page: "dashboard" | "profile" | "file-viewer") => void
   onLogout: () => void
 }
 
 function FilePreview({ file }: { file: any }) {
   const getFileIcon = (type: string) => {
-    switch (type) {
-      case "pdf":
-        return <FileText className="h-16 w-16 text-red-500" />
-      case "image":
-        return <ImageIcon className="h-16 w-16 text-green-500" />
-      case "video":
-        return <Video className="h-16 w-16 text-purple-500" />
-      case "audio":
-        return <Music className="h-16 w-16 text-blue-500" />
-      case "archive":
-        return <Archive className="h-16 w-16 text-orange-500" />
-      case "code":
-        return <Code className="h-16 w-16 text-gray-500" />
-      case "folder":
-        return <div className="text-6xl">📁</div>
-      default:
-        return <FileText className="h-16 w-16 text-gray-500" />
+    const lowerType = type.toLowerCase()
+    if (lowerType.includes("pdf")) return <FileText className="h-16 w-16 text-red-500" />
+    if (lowerType.includes("image")) return <ImageIcon className="h-16 w-16 text-green-500" />
+    if (lowerType.includes("video")) return <Video className="h-16 w-16 text-purple-500" />
+    if (lowerType.includes("audio")) return <Music className="h-16 w-16 text-blue-500" />
+    if (lowerType.includes("zip") || lowerType.includes("rar") || lowerType.includes("7z")) {
+      return <Archive className="h-16 w-16 text-orange-500" />
     }
+    if (
+      lowerType.includes("code") ||
+      lowerType.includes("javascript") ||
+      lowerType.includes("typescript") ||
+      lowerType.includes("json")
+    ) {
+      return <Code className="h-16 w-16 text-gray-500" />
+    }
+    return <FileText className="h-16 w-16 text-gray-500" />
   }
 
-  if (file.type === "pdf") {
+  const fileType = file.fileType?.toLowerCase() || "file"
+
+  if (fileType.includes("pdf")) {
     return (
       <div className="w-full h-96 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
         <div className="text-center space-y-4">
-          {getFileIcon(file.type)}
+          {getFileIcon(fileType)}
           <div>
             <p className="font-medium">PDF Preview</p>
             <p className="text-sm text-muted-foreground">Click download to view the full document</p>
@@ -140,30 +361,21 @@ function FilePreview({ file }: { file: any }) {
     )
   }
 
-  if (file.type === "video") {
-    return (
-      <div className="w-full h-96 bg-black rounded-lg flex items-center justify-center">
-        <div className="text-center space-y-4 text-white">
-          {getFileIcon(file.type)}
-          <div>
-            <p className="font-medium">Video Preview</p>
-            <p className="text-sm opacity-70">Click to play video</p>
-          </div>
-        </div>
-      </div>
-    )
+  if (fileType.includes("video")) {
+    return <VideoPlayer fileUrl={file.fileUrl} fileName={file.fileName} />
   }
 
-  if (file.type === "folder") {
+  if (fileType.includes("image")) {
     return (
-      <div className="w-full h-96 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="text-6xl">📁</div>
-          <div>
-            <p className="font-medium">Folder Contents</p>
-            <p className="text-sm text-muted-foreground">{file.size}</p>
-          </div>
-        </div>
+      <div className="w-full h-96 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden">
+        <img
+          src={file.fileUrl}
+          alt={file.fileName}
+          className="max-h-96 max-w-full object-contain"
+          onError={(e) => {
+            e.currentTarget.src = ""
+          }}
+        />
       </div>
     )
   }
@@ -171,7 +383,7 @@ function FilePreview({ file }: { file: any }) {
   return (
     <div className="w-full h-96 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-center">
       <div className="text-center space-y-4">
-        {getFileIcon(file.type)}
+        {getFileIcon(fileType)}
         <div>
           <p className="font-medium">File Preview</p>
           <p className="text-sm text-muted-foreground">Preview not available for this file type</p>
@@ -186,6 +398,82 @@ function TopNavigation({
   onLogout,
 }: { onNavigate: (page: "dashboard" | "profile") => void; onLogout: () => void }) {
   const { theme, setTheme } = useTheme()
+  const [user, setUser] = useState<any>(null)
+  const [profilePicture, setProfilePicture] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const userData = getSessionUser()
+    if (userData) {
+      setUser(userData)
+      if (userData._id) {
+        fetchProfilePicture(userData._id)
+      }
+    }
+
+    const handleStorageChange = () => {
+      const updatedUserData = getSessionUser()
+      if (updatedUserData) {
+        setUser(updatedUserData)
+        if (updatedUserData._id) {
+          fetchProfilePicture(updatedUserData._id)
+        }
+      }
+    }
+
+    const handleUserUpdate = () => {
+      const updatedUserData = getSessionUser()
+      if (updatedUserData) {
+        setUser(updatedUserData)
+        if (updatedUserData._id) {
+          fetchProfilePicture(updatedUserData._id)
+        }
+      }
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+    window.addEventListener("userUpdated", handleUserUpdate)
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+      window.removeEventListener("userUpdated", handleUserUpdate)
+    }
+  }, [])
+
+  const fetchProfilePicture = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/auth/profile?userId=${userId}&includeImage=true`)
+      const data = await response.json()
+      if (data.user?.profilePicture) {
+        setProfilePicture(data.user.profilePicture)
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile picture:", error)
+    }
+  }
+
+  const getInitials = (firstName?: string, lastName?: string) => {
+    if (!firstName && !lastName) return "U"
+    const first = firstName?.[0]?.toUpperCase() || ""
+    const last = lastName?.[0]?.toUpperCase() || ""
+    return (first + last).slice(0, 2)
+  }
+
+  if (!mounted) {
+    return (
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+        <div className="flex h-14 md:h-16 items-center gap-2 md:gap-4 px-4 md:px-6">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-teal-500 text-white font-bold text-sm">
+              DD
+            </div>
+            <span className="font-semibold text-lg hidden sm:block">DropDrive</span>
+          </div>
+        </div>
+      </header>
+    )
+  }
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -219,16 +507,16 @@ function TopNavigation({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 md:h-9 md:w-9 rounded-full">
                 <Avatar className="h-7 w-7 md:h-8 md:w-8">
-                  <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-                  <AvatarFallback>JD</AvatarFallback>
+                  <AvatarImage src={profilePicture || undefined} alt={user?.firstName || "User"} />
+                  <AvatarFallback>{getInitials(user?.firstName, user?.lastName)}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <div className="flex items-center justify-start gap-2 p-2">
                 <div className="flex flex-col space-y-1 leading-none">
-                  <p className="font-medium">John Doe</p>
-                  <p className="w-[200px] truncate text-sm text-muted-foreground">john.doe@example.com</p>
+                  <p className="font-medium">{user?.firstName} {user?.lastName}</p>
+                  <p className="w-[200px] truncate text-sm text-muted-foreground">{user?.email}</p>
                 </div>
               </div>
               <DropdownMenuSeparator />
@@ -257,31 +545,78 @@ export function FileViewerPage({ fileId, onNavigate, onLogout }: FileViewerPageP
   const [file, setFile] = useState<any>(null)
   const [isStarred, setIsStarred] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // In a real app, you'd fetch the file data from an API
-    const foundFile = files.find((f) => f.id === fileId)
-    if (foundFile) {
-      setFile(foundFile)
-      setIsStarred(foundFile.starred)
+    const fetchFile = async () => {
+      if (!fileId) {
+        setError("No file ID provided")
+        setLoading(false)
+        return
+      }
+
+      try {
+        const response = await fetch(`/api/files/${fileId}`)
+        if (!response.ok) {
+          throw new Error("File not found")
+        }
+        const data = await response.json()
+        setFile(data)
+        setIsStarred(data.starred || false)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load file")
+      } finally {
+        setLoading(false)
+      }
     }
+
+    fetchFile()
   }, [fileId])
 
-  if (!file) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading file...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !file) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-semibold mb-2">File not found</h2>
-          <p className="text-muted-foreground mb-4">The file you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground mb-4">{error || "The file you're looking for doesn't exist."}</p>
           <Button onClick={() => onNavigate("dashboard")}>Back to Dashboard</Button>
         </div>
       </div>
     )
   }
 
-  const handleStarToggle = () => {
-    setIsStarred(!isStarred)
-    // In a real app, you'd update this on the server
+  const handleStarToggle = async () => {
+    try {
+      await fetch("/api/files", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "star",
+          fileId: fileId,
+          value: !isStarred,
+        }),
+      })
+      setIsStarred(!isStarred)
+    } catch (err) {
+      console.error("Failed to toggle star:", err)
+    }
+  }
+
+  const handleDownload = async () => {
+    if (file.fileUrl) {
+      window.open(file.fileUrl, "_blank")
+    }
   }
 
   return (
@@ -294,9 +629,9 @@ export function FileViewerPage({ fileId, onNavigate, onLogout }: FileViewerPageP
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl font-semibold truncate">{file.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-semibold truncate">{file.fileName}</h1>
             <p className="text-muted-foreground">
-              {file.size} • Modified {file.modified} • Created {file.created}
+              {file.fileSize} • Modified {new Date(file.lastModified || file.uploadTime).toLocaleDateString()} • Created {new Date(file.uploadTime).toLocaleDateString()}
             </p>
           </div>
         </div>
@@ -313,7 +648,7 @@ export function FileViewerPage({ fileId, onNavigate, onLogout }: FileViewerPageP
 
             {/* File Actions */}
             <div className="flex flex-wrap gap-2">
-              <Button className="gap-2">
+              <Button className="gap-2" onClick={handleDownload}>
                 <Download className="h-4 w-4" />
                 Download
               </Button>
@@ -335,7 +670,9 @@ export function FileViewerPage({ fileId, onNavigate, onLogout }: FileViewerPageP
                     <Eye className="mr-2 h-4 w-4" />
                     Preview
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {
+                    navigator.clipboard.writeText(window.location.href)
+                  }}>
                     <Copy className="mr-2 h-4 w-4" />
                     Copy Link
                   </DropdownMenuItem>
@@ -347,16 +684,6 @@ export function FileViewerPage({ fileId, onNavigate, onLogout }: FileViewerPageP
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-
-            {/* Description */}
-            {file.description && (
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold mb-2">Description</h3>
-                  <p className="text-muted-foreground">{file.description}</p>
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           {/* Sidebar */}
@@ -368,70 +695,30 @@ export function FileViewerPage({ fileId, onNavigate, onLogout }: FileViewerPageP
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Type</span>
-                    <Badge variant="secondary">{file.type.toUpperCase()}</Badge>
+                    <Badge variant="secondary">{file.fileType.toUpperCase()}</Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Size</span>
-                    <span>{file.size}</span>
+                    <span>{file.fileSize}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Owner</span>
-                    <span>{file.owner}</span>
+                    <span>You</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Views</span>
-                    <span>{file.viewCount}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Downloads</span>
-                    <span>{file.downloadCount}</span>
+                    <span className="text-muted-foreground">Uploaded</span>
+                    <span>{new Date(file.uploadTime).toLocaleDateString()}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Tags */}
-            {file.tags && file.tags.length > 0 && (
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold mb-3">Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {file.tags.map((tag: string) => (
-                      <Badge key={tag} variant="outline">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {/* Sharing Info */}
             <Card>
               <CardContent className="p-6 space-y-4">
                 <h3 className="font-semibold">Sharing</h3>
 
-                {file.publicLink ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Globe className="h-4 w-4 text-green-500" />
-                      <span>Public link active</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 text-xs bg-muted p-2 rounded truncate">{file.publicLink}</code>
-                      <Button size="icon" variant="outline" className="h-8 w-8 bg-transparent">
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <X className="h-4 w-4" />
-                    <span>Not publicly shared</span>
-                  </div>
-                )}
-
-                {file.sharedWith && file.sharedWith.length > 0 && (
+                {file.sharedWith && file.sharedWith.length > 0 ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm">
                       <Users className="h-4 w-4 text-blue-500" />
@@ -439,13 +726,18 @@ export function FileViewerPage({ fileId, onNavigate, onLogout }: FileViewerPageP
                     </div>
                     <ScrollArea className="h-20">
                       <div className="space-y-1">
-                        {file.sharedWith.map((email: string) => (
-                          <div key={email} className="text-xs text-muted-foreground">
+                        {file.sharedWith.map((email: string, idx: number) => (
+                          <div key={idx} className="text-xs text-muted-foreground">
                             {email}
                           </div>
                         ))}
                       </div>
                     </ScrollArea>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <X className="h-4 w-4" />
+                    <span>Not shared</span>
                   </div>
                 )}
 
@@ -457,29 +749,6 @@ export function FileViewerPage({ fileId, onNavigate, onLogout }: FileViewerPageP
                   <Share2 className="h-4 w-4" />
                   Manage Sharing
                 </Button>
-              </CardContent>
-            </Card>
-
-            {/* Activity */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold mb-3">Recent Activity</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                    <div>
-                      <p>File viewed by you</p>
-                      <p className="text-muted-foreground text-xs">2 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                    <div>
-                      <p>File uploaded</p>
-                      <p className="text-muted-foreground text-xs">{file.created}</p>
-                    </div>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>

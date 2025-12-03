@@ -37,8 +37,10 @@ function ProfileNavigation({ onNavigate, onLogout }: ProfilePageProps) {
   const [user, setUser] = React.useState<any>(null)
   const [profilePicture, setProfilePicture] = React.useState<string | null>(null)
   const [isLoadingImage, setIsLoadingImage] = React.useState(false)
+  const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
+    setMounted(true)
     const userData = getSessionUser()
     if (userData) {
       setUser(userData)
@@ -84,6 +86,18 @@ function ProfileNavigation({ onNavigate, onLogout }: ProfilePageProps) {
     const first = firstName?.[0]?.toUpperCase() || ""
     const last = lastName?.[0]?.toUpperCase() || ""
     return (first + last).slice(0, 2)
+  }
+
+  if (!mounted) {
+    return (
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+        <div className="flex h-14 md:h-16 items-center gap-2 md:gap-4 px-4 md:px-6">
+          <Button variant="ghost" size="icon" className="h-8 w-8 md:h-9 md:w-9" disabled>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>
+      </header>
+    )
   }
 
   return (

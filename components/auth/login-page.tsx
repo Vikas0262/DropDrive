@@ -65,10 +65,10 @@ export function LoginPage({ onNavigate, onLogin }: LoginPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" suppressHydrationWarning>
       <AuthNavigation />
 
-      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4" suppressHydrationWarning>
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-2">Welcome back</h1>
@@ -82,8 +82,8 @@ export function LoginPage({ onNavigate, onLogin }: LoginPageProps) {
                 Enter your email and password to access your files
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <form onSubmit={handleSubmit} className="space-y-4">
+            <CardContent className="space-y-4" suppressHydrationWarning>
+              <form onSubmit={handleSubmit} className="space-y-4" suppressHydrationWarning>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">
@@ -176,8 +176,8 @@ export function LoginPage({ onNavigate, onLogin }: LoginPageProps) {
                 </Button>
               </div>
             </CardContent>
-            <CardFooter>
-              <div className="text-center text-sm text-muted-foreground w-full">
+            <CardFooter suppressHydrationWarning>
+              <div className="text-center text-sm text-muted-foreground w-full" suppressHydrationWarning>
                 Don't have an account?{" "}
                 <Button variant="link" className="px-0 text-sm font-medium" onClick={() => onNavigate("signup")}>
                   Sign up

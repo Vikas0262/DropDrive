@@ -6,7 +6,7 @@ import { FileViewerPage } from "@/components/file-viewer/file-viewer-page"
 export default function FileViewer() {
   const router = useRouter()
   const params = useParams()
-  const fileId = params.id ? Number.parseInt(params.id as string) : null
+  const fileId = params.id as string || null
 
   const handleNavigate = (page: "dashboard" | "profile" | "file-viewer") => {
     if (page === "dashboard") {
