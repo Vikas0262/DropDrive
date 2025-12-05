@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { ProfilePage } from "@/components/profile/profile-page"
+import { ProtectedRoute } from "@/components/protected-route"
 
 export default function Profile() {
   const router = useRouter()
@@ -12,9 +13,24 @@ export default function Profile() {
     }
   }
 
-  const handleLogout = () => {
-    router.push("/auth/login")
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+      localStorage.removeItem("user")
+      localStorage.removeItem("token")
+      router.push("/")
+      router.refresh()
+    } catch (error) {
+      console.error('Logout error:', error)
+      localStorage.removeItem("user")
+      localStorage.removeItem("token")
+      router.push("/")
+    }
   }
 
-  return <ProfilePage onNavigate={handleNavigate} onLogout={handleLogout} />
+  return (
+    <ProtectedRoute>
+      <ProfilePage onNavigate={handleNavigate} onLogout={handleLogout} />
+    </ProtectedRoute>
+  )
 }

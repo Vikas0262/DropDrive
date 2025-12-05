@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { FileManager } from "@/components/file-manager"
+import { ProtectedRoute } from "@/components/protected-route"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -12,13 +13,28 @@ export default function DashboardPage() {
     }
   }
 
-  const handleLogout = () => {
-    router.push("/auth/login")
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+      localStorage.removeItem("user")
+      localStorage.removeItem("token")
+      router.push("/")
+      router.refresh()
+    } catch (error) {
+      console.error('Logout error:', error)
+      localStorage.removeItem("user")
+      localStorage.removeItem("token")
+      router.push("/")
+    }
   }
 
   const handleFileView = (fileId: string) => {
     router.push(`/file/${fileId}`)
   }
 
-  return <FileManager onNavigate={handleNavigate} onLogout={handleLogout} onFileView={handleFileView} />
+  return (
+    <ProtectedRoute>
+      <FileManager onNavigate={handleNavigate} onLogout={handleLogout} onFileView={handleFileView} />
+    </ProtectedRoute>
+  )
 }

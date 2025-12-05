@@ -31,14 +31,32 @@ export async function POST(request: Request) {
     // Remove profilePicture from response to avoid headers too big error
     const { profilePicture: _, ...userWithoutImage } = user;
 
-    // Return success response without sensitive data
-    return NextResponse.json(
+    // Create response
+    const response = NextResponse.json(
       { 
         message: 'User registered successfully',
         user: userWithoutImage,
       },
       { status: 201 }
     );
+
+    // Set authentication token cookie
+    response.cookies.set('token', 'authenticated', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60, // 24 hours
+    });
+
+    // Set user session cookie
+    response.cookies.set('user', JSON.stringify(userWithoutImage), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60, // 24 hours
+    });
+
+    return response;
 
   } catch (error: any) {
     console.error('Registration error:', error);

@@ -32,6 +32,14 @@ export async function POST(request: Request) {
       { status: 200 }
     );
 
+    // Set authentication token cookie
+    response.cookies.set('token', 'authenticated', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60, // 24 hours
+    });
+
     // Set user session cookie (without large profilePicture)
     response.cookies.set('user', JSON.stringify(userWithoutImage), {
       httpOnly: true,

@@ -174,12 +174,16 @@ function MobileSidebar({
       <SheetContent side="left" className="w-80 p-0">
         <div className="flex flex-col h-full">
           <div className="border-b px-6 py-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-teal-500 text-white font-bold text-sm">
-                DD
-              </div>
-              <span className="font-semibold text-lg">DropDrive</span>
-            </div>
+            <div className="flex items-center gap-0">
+          <div className="relative h-12 w-12 flex-shrink-0 rounded-full overflow-hidden pt-1.2">
+            <img
+              src="/logoicon.png"
+              alt="DropDrive Logo"
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <span className="font-semibold text-lg">DropDrive</span>
+        </div>
           </div>
 
           <div className="flex-1 px-4 py-4">
