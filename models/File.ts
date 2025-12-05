@@ -20,6 +20,9 @@ interface IFile extends Document {
   fileUrl?: string; // Cloudinary URL or storage URL
   cloudinaryPublicId?: string; // For deletion
   description?: string;
+  publicSlug?: string; // Unique slug for public sharing (e.g., "abc123def")
+  isPublic?: boolean; // Toggle for public access
+  publicLinkExpiry?: Date; // Optional expiration date for public link
   createdAt: Date;
   updatedAt: Date;
 }
@@ -106,6 +109,21 @@ const fileSchema = new Schema<IFile>(
     description: {
       type: String,
       default: '',
+    },
+    publicSlug: {
+      type: String,
+      unique: true,
+      sparse: true, // Allow multiple null values but unique non-null values
+      index: true,
+    },
+    isPublic: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    publicLinkExpiry: {
+      type: Date,
+      default: null,
     },
   },
   {

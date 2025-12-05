@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db/mongodb';
 import File from '@/models/File';
 import User from '@/models/User';
 import { v2 as cloudinary } from 'cloudinary';
+import { generatePublicSlug } from '@/lib/share/generateSlug';
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -114,6 +115,14 @@ export async function POST(request: NextRequest) {
 
     const cloudinaryResult = uploadResult as any;
 
+    // Generate unique public slug for sharing
+    let publicSlug = generatePublicSlug();
+    let existingFile = await File.findOne({ publicSlug });
+    while (existingFile) {
+      publicSlug = generatePublicSlug();
+      existingFile = await File.findOne({ publicSlug });
+    }
+
     // Create file record in MongoDB
     const newFile = await File.create({
       userId,
@@ -130,6 +139,9 @@ export async function POST(request: NextRequest) {
       fileUrl: cloudinaryResult.secure_url,
       cloudinaryPublicId: cloudinaryResult.public_id,
       description: '',
+      publicSlug, // Store the generated slug
+      isPublic: false, // Default to private
+      publicLinkExpiry: null,
     });
 
     return NextResponse.json(
@@ -148,6 +160,11 @@ export async function POST(request: NextRequest) {
           fileUrl: newFile.fileUrl,
           isFolder: false,
           isDeleted: false,
+          publicSlug: newFile.publicSlug,
+          isPublic: newFile.isPublic,
+          publicLink: newFile.publicSlug
+            ? `https://dropdrive.com/shared/${newFile.publicSlug}`
+            : null,
         },
       },
       { status: 201 }

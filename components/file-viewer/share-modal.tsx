@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Globe, Copy, Check, X, Eye, Edit, UserPlus, Link, Send } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Globe, Copy, Check, X, Eye, Edit, UserPlus, Link, Send, AlertCircle } from "lucide-react"
 
 interface ShareModalProps {
   isOpen: boolean
@@ -21,20 +22,111 @@ interface ShareModalProps {
   file: any
 }
 
+interface ShareStatus {
+  isPublic: boolean
+  publicSlug: string | null
+  publicLink: string | null
+  publicLinkExpiry: string | null
+}
+
 export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
-  const [publicLinkEnabled, setPublicLinkEnabled] = useState(!!file.publicLink)
+  const [shareStatus, setShareStatus] = useState<ShareStatus | null>(null)
+  const [publicLinkEnabled, setPublicLinkEnabled] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
   const [emailInput, setEmailInput] = useState("")
   const [emailMessage, setEmailMessage] = useState("")
   const [permission, setPermission] = useState("view")
   const [sharedUsers, setSharedUsers] = useState(file.sharedWith || [])
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingShare, setIsLoadingShare] = useState(false)
+  const [shareError, setShareError] = useState<string | null>(null)
+  const [expiryDays, setExpiryDays] = useState<string>("never")
+
+  // Fetch share status on modal open
+  useEffect(() => {
+    if (isOpen && file?.id) {
+      fetchShareStatus()
+    }
+  }, [isOpen, file?.id])
+
+  const fetchShareStatus = async () => {
+    try {
+      setShareError(null)
+      const fileId = file?.id || file?._id
+      if (!fileId) {
+        setShareError("File ID is missing")
+        return
+      }
+
+      const response = await fetch(`/api/files/${fileId}/share`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setShareStatus(data)
+        setPublicLinkEnabled(data.isPublic || false)
+      }
+    } catch (error) {
+      console.error("Failed to fetch share status:", error)
+      setShareError("Failed to load share settings")
+    }
+  }
 
   const handleCopyLink = async () => {
-    const link = file.publicLink || `https://dropdrive.com/view/file/${file.id}`
-    await navigator.clipboard.writeText(link)
-    setLinkCopied(true)
-    setTimeout(() => setLinkCopied(false), 2000)
+    if (!shareStatus?.publicSlug) return
+    // Use the publicLink from API or construct it with the current origin
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+    const link = shareStatus?.publicLink?.startsWith('http') 
+      ? shareStatus.publicLink
+      : `${baseUrl}${shareStatus?.publicLink || `/shared/${shareStatus?.publicSlug}`}`
+    if (link) {
+      await navigator.clipboard.writeText(link)
+      setLinkCopied(true)
+      setTimeout(() => setLinkCopied(false), 2000)
+    }
+  }
+
+  const handlePublicLinkToggle = async (enabled: boolean) => {
+    try {
+      setIsLoadingShare(true)
+      setShareError(null)
+
+      const fileId = file?.id || file?._id
+      if (!fileId) {
+        setShareError("File ID is missing")
+        setIsLoadingShare(false)
+        return
+      }
+
+      const response = await fetch(`/api/files/${fileId}/share`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          isPublic: enabled,
+          expiryDays: expiryDays !== "never" ? parseInt(expiryDays) : undefined,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setShareStatus(data)
+        setPublicLinkEnabled(enabled)
+      } else {
+        const error = await response.json()
+        setShareError(error.error || "Failed to update share settings")
+      }
+    } catch (error) {
+      console.error("Error updating share status:", error)
+      setShareError("Failed to update share settings")
+    } finally {
+      setIsLoadingShare(false)
+    }
   }
 
   const handleEmailShare = async () => {
@@ -52,11 +144,6 @@ export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
 
   const handleRemoveUser = (email: string) => {
     setSharedUsers(sharedUsers.filter((user: string) => user !== email))
-  }
-
-  const handlePublicLinkToggle = (enabled: boolean) => {
-    setPublicLinkEnabled(enabled)
-    // In a real app, you'd update this on the server
   }
 
   return (
@@ -187,6 +274,13 @@ export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
           </TabsContent>
 
           <TabsContent value="link" className="space-y-4 mt-4">
+            {shareError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{shareError}</AlertDescription>
+              </Alert>
+            )}
+
             {/* Public Link Toggle */}
             <div className="flex items-center justify-between p-4 border rounded-lg">
               <div className="space-y-1">
@@ -196,22 +290,43 @@ export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
                 </div>
                 <p className="text-sm text-muted-foreground">Anyone with the link can view this file</p>
               </div>
-              <Switch checked={publicLinkEnabled} onCheckedChange={handlePublicLinkToggle} />
+              <Switch
+                checked={publicLinkEnabled}
+                onCheckedChange={handlePublicLinkToggle}
+                disabled={isLoadingShare}
+              />
             </div>
 
-            {publicLinkEnabled && (
+            {publicLinkEnabled && shareStatus?.publicSlug && (
               <div className="space-y-4">
                 {/* Link Display */}
                 <div className="space-y-2">
                   <Label>Share this link</Label>
                   <div className="flex items-center gap-2">
                     <Input
-                      value={file.publicLink || `https://dropdrive.com/view/file/${file.id}`}
+                      value={(() => {
+                        if (!shareStatus?.publicSlug) return ""
+                        const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+                        const link = shareStatus?.publicLink?.startsWith('http') 
+                          ? shareStatus.publicLink
+                          : `${baseUrl}${shareStatus?.publicLink || `/shared/${shareStatus?.publicSlug}`}`
+                        return link
+                      })()}
                       readOnly
                       className="flex-1 font-mono text-sm"
                     />
-                    <Button variant="outline" size="icon" onClick={handleCopyLink} className="shrink-0 bg-transparent">
-                      {linkCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={handleCopyLink}
+                      className="shrink-0 bg-transparent"
+                      disabled={isLoadingShare}
+                    >
+                      {linkCopied ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                   {linkCopied && <p className="text-sm text-green-600">Link copied to clipboard!</p>}
@@ -250,15 +365,15 @@ export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
                 {/* Link Expiration */}
                 <div className="space-y-2">
                   <Label>Link expiration</Label>
-                  <Select defaultValue="never">
+                  <Select value={expiryDays} onValueChange={setExpiryDays}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="never">Never expires</SelectItem>
-                      <SelectItem value="1day">1 day</SelectItem>
-                      <SelectItem value="1week">1 week</SelectItem>
-                      <SelectItem value="1month">1 month</SelectItem>
+                      <SelectItem value="1">1 day</SelectItem>
+                      <SelectItem value="7">1 week</SelectItem>
+                      <SelectItem value="30">1 month</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
