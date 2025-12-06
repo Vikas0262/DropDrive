@@ -25,8 +25,10 @@ export async function GET(request: NextRequest) {
     const code = searchParams.get('code');
     const error = searchParams.get('error');
 
-    // Get the callback URL (must match the one used in route.ts)
-    const callbackURL = process.env.OAUTH_CALLBACK_URL!;
+    // Construct callback URL dynamically from NEXTAUTH_URL or request headers
+    const baseUrl = process.env.NEXTAUTH_URL || 
+      `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`;
+    const callbackURL = `${baseUrl}/api/auth/google/callback`;
 
     console.log('==========================================');
     console.log('📨 GOOGLE OAUTH CALLBACK RECEIVED');
