@@ -111,11 +111,6 @@ const sidebarItems: Array<{
     icon: HardDrive,
     filter: "my-drive",
   },
-  // {
-  //   title: "View All Folders",
-  //   icon: Folder,
-  //   filter: "all-folders",
-  // },
   {
     title: "Shared with me",
     icon: Users,
@@ -1019,7 +1014,6 @@ function MainContent({
   const getFilterTitle = () => {
     const titles: Record<FilterType, string> = {
       "my-drive": "My Drive",
-      "all-folders": "All Folders",
       shared: "Shared with me",
       recent: "Recent",
       starred: "Starred",
@@ -1031,7 +1025,6 @@ function MainContent({
   const getFilterDescription = () => {
     const descriptions: Record<FilterType, string> = {
       "my-drive": "Manage your files and folders",
-      "all-folders": "View all folders with nested structure",
       shared: "Files shared with you",
       recent: "Recently modified files",
       starred: "Your starred files",

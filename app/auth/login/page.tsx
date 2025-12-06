@@ -49,6 +49,7 @@ function AuthNavigation() {
             size="icon"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="h-8 w-8 md:h-9 md:w-9"
+            suppressHydrationWarning
           >
             <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -197,6 +198,7 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-10"
                       required
+                      suppressHydrationWarning
                     />
                   </div>
                 </div>
@@ -212,6 +214,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       className="pl-10 pr-10"
                       required
+                      suppressHydrationWarning
                     />
                     <Button
                       type="button"
@@ -219,6 +222,7 @@ export default function LoginPage() {
                       size="icon"
                       className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
+                      suppressHydrationWarning
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -234,11 +238,12 @@ export default function LoginPage() {
                     variant="link"
                     className="px-0 text-sm"
                     onClick={() => router.push("/auth/forgot-password")}
+                    suppressHydrationWarning
                   >
                     Forgot password?
                   </Button>
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full" disabled={isLoading} suppressHydrationWarning>
                   {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
@@ -259,6 +264,7 @@ export default function LoginPage() {
                   onClick={() => setShowGoogleDialog(true)}
                   disabled={isGoogleLoading}
                   type="button"
+                  suppressHydrationWarning
                 >
                   {isGoogleLoading ? (
                     <>Loading...</>
@@ -292,6 +298,7 @@ export default function LoginPage() {
                   onClick={() => setShowGithubDialog(true)}
                   disabled={isGithubLoading}
                   type="button"
+                  suppressHydrationWarning
                 >
                   {isGithubLoading ? (
                     <>Loading...</>
@@ -313,6 +320,7 @@ export default function LoginPage() {
                   variant="link"
                   className="px-0 text-sm font-medium"
                   onClick={() => router.push("/auth/register")}
+                  suppressHydrationWarning
                 >
                   Sign up
                 </Button>

@@ -168,18 +168,25 @@ export async function GET(request: NextRequest) {
     };
 
     // Create response and redirect to dashboard
-    const response = NextResponse.redirect(new URL('/dashboard', request.url));
+    const response = NextResponse.redirect(new URL('/dashboard?oauth=github', request.url));
 
-    // Set cookies
-    response.cookies.set('user', JSON.stringify(userForCookie), {
+    // Clear old cookies if they exist (in case user was already logged in with different account)
+    response.cookies.delete('user');
+    response.cookies.delete('token');
+    response.cookies.delete('userData'); // Also clear non-httpOnly user data cookie
+
+    // Set httpOnly token cookie (secure, not accessible to JavaScript)
+    response.cookies.set('token', jwtToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 24 * 60 * 60, // 24 hours
     });
 
-    response.cookies.set('token', jwtToken, {
-      httpOnly: true,
+    // Set non-httpOnly user cookie that JavaScript CAN read
+    // This is for client-side access, the httpOnly token is for API calls
+    response.cookies.set('userData', JSON.stringify(userForCookie), {
+      httpOnly: false,  // Allow JavaScript to read this
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 24 * 60 * 60, // 24 hours

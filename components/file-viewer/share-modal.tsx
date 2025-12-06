@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { getSessionUser } from "@/lib/auth/session"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -30,6 +31,7 @@ interface ShareStatus {
 }
 
 export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
+  const user = getSessionUser()
   const [shareStatus, setShareStatus] = useState<ShareStatus | null>(null)
   const [publicLinkEnabled, setPublicLinkEnabled] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
@@ -62,6 +64,7 @@ export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          ...(user?._id && { "x-user-id": user._id }),
         },
       })
 
@@ -106,6 +109,7 @@ export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          ...(user?._id && { "x-user-id": user._id }),
         },
         body: JSON.stringify({
           isPublic: enabled,

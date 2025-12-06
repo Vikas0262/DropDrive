@@ -17,7 +17,7 @@ export interface FileItem {
   folderId?: string;
 }
 
-export type FilterType = 'my-drive' | 'shared' | 'recent' | 'starred' | 'trash' | 'all-folders';
+export type FilterType = 'my-drive' | 'shared' | 'recent' | 'starred' | 'trash';
 
 export interface UploadingFile {
   id: string;
@@ -33,13 +33,34 @@ export function useFileManager() {
   const [sharedCount, setSharedCount] = useState(0);
   const [folderPath, setFolderPath] = useState<Array<{ id: string; name: string }>>([]);
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
+  const [user, setUser] = useState(() => getSessionUser());
 
-  const user = getSessionUser();
+  // Listen for user updates (from OAuth or manual login)
+  useEffect(() => {
+    const handleUserUpdate = () => {
+      console.log('📝 useFileManager: User updated, fetching new user data');
+      setUser(getSessionUser());
+    };
+
+    // Listen for custom userUpdated event (from SessionProvider or OAuth)
+    window.addEventListener('userUpdated', handleUserUpdate);
+    // Also listen for storage changes
+    window.addEventListener('storage', handleUserUpdate);
+
+    return () => {
+      window.removeEventListener('userUpdated', handleUserUpdate);
+      window.removeEventListener('storage', handleUserUpdate);
+    };
+  }, []);
 
   const fetchFiles = useCallback(
     async (currentFilter: FilterType = filter, currentFolderId: string | null = folderId) => {
-      if (!user?._id) return;
+      if (!user?._id) {
+        console.log('⚠️  useFileManager: No user ID, skipping file fetch');
+        return;
+      }
 
+      console.log('🔄 useFileManager: Fetching files for user:', user._id);
       setLoading(true);
       try {
         const params = new URLSearchParams();
