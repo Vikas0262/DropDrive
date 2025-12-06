@@ -41,7 +41,9 @@ export async function POST(request: Request) {
 
     // In a real application, you would send an email here with the reset link
     // For now, we'll return the token for development/testing
-    const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/auth/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL;
+    if (!baseUrl) throw new Error('NEXTAUTH_URL or NEXT_PUBLIC_BASE_URL must be set');
+    const resetUrl = `${baseUrl}/auth/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
 
     console.log('Password reset URL:', resetUrl);
 

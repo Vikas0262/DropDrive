@@ -163,10 +163,10 @@ export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
 
         <Tabs defaultValue="share" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="share" className="gap-2">
-              <UserPlus className="h-4 w-4" />
-              Share with People
-            </TabsTrigger>
+              {/* <TabsTrigger value="share" className="gap-2">
+                <UserPlus className="h-4 w-4" />
+                Share with People
+              </TabsTrigger> */}
             <TabsTrigger value="link" className="gap-2">
               <Link className="h-4 w-4" />
               Public Link

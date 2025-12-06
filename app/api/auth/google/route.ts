@@ -3,48 +3,38 @@ import { google } from 'googleapis';
 
 /**
  * ============================================================================
- * GOOGLE OAUTH REDIRECT URI CONFIGURATION CHECKLIST
+ * GOOGLE OAUTH REDIRECT URI CONFIGURATION
  * ============================================================================
  * 
- * IMPORTANT: The redirect URI must EXACTLY match in 3 places:
+ * REQUIRED ENVIRONMENT VARIABLES:
+ * - OAUTH_CALLBACK_URL (e.g., http://localhost:3000/api/auth/google/callback for local,
+ *                              https://yourdomain.com/api/auth/google/callback for production)
+ * - NEXTAUTH_URL (used as fallback for dynamic URL construction)
  * 
- * 1. ✅ In your .env file:
- *    OAUTH_CALLBACK_URL=http://localhost:3000/api/auth/google/callback
+ * Setup in Google Cloud Console:
+ * 1. Go to: https://console.cloud.google.com/apis/credentials
+ * 2. Select your OAuth 2.0 Client ID
+ * 3. Under "Authorized redirect URIs", add your OAUTH_CALLBACK_URL value
  * 
- * 2. ✅ In Google Cloud Console:
- *    - Go to: https://console.cloud.google.com/apis/credentials
- *    - Select your OAuth 2.0 Client ID
- *    - Under "Authorized redirect URIs", add EXACTLY:
- *      http://localhost:3000/api/auth/google/callback
+ * URL Requirements:
+ * ✅ Same protocol (http for local, https for production)
+ * ✅ Same domain (localhost for local, yourdomain.com for production)
+ * ✅ Same port number (3000 for local, default 443 for production)
+ * ✅ Same path (/api/auth/google/callback)
+ * ✅ NO trailing slash at the end
  * 
- * 3. ✅ In this code (uses OAUTH_CALLBACK_URL from env)
- * 
- * CHECKLIST:
- * □ Same protocol (http vs https)
- * □ Same domain (localhost vs 127.0.0.1)
- * □ Same port number (3000 vs 5000 etc.)
- * □ Same path (/api/auth/google/callback)
- * □ NO trailing slash at the end
- * □ For production, use https:// not http://
- * 
- * Common mistakes:
- * ❌ http://localhost:3000/api/auth/google/callback/  (trailing slash)
- * ❌ https://localhost:3000/api/auth/google/callback  (https on localhost)
- * ❌ http://127.0.0.1:3000/api/auth/google/callback   (IP instead of localhost)
- * ❌ http://localhost:5000/api/auth/google/callback   (wrong port)
- * 
- * ✅ Correct for local development:
- *    http://localhost:3000/api/auth/google/callback
- * 
- * ✅ Correct for production (example):
- *    https://yourdomain.com/api/auth/google/callback
+ * Examples:
+ * ✅ Local:      http://localhost:3000/api/auth/google/callback
+ * ✅ Production: https://yourdomain.com/api/auth/google/callback
  * ============================================================================
  */
 
 export async function GET(request: NextRequest) {
   try {
     // Get the callback URL from environment variable
-    const callbackURL = process.env.OAUTH_CALLBACK_URL || 'http://localhost:3000/api/auth/google/callback';
+    // Use OAUTH_CALLBACK_URL if set, otherwise construct from NEXTAUTH_URL or request origin
+    const callbackURL = process.env.OAUTH_CALLBACK_URL || 
+      `${process.env.NEXTAUTH_URL || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`}/api/auth/google/callback`;
     
     // ========== CRITICAL: COPY THIS EXACT VALUE ==========
     console.log('\n\n');

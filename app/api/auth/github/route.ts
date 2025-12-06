@@ -7,14 +7,15 @@ import { NextRequest, NextResponse } from 'next/server';
  * 
  * IMPORTANT: The redirect URI must EXACTLY match in GitHub OAuth App settings:
  * 
- * 1. ✅ In your .env file:
- *    GITHUB_CALLBACK_URL=http://localhost:3000/api/auth/github/callback
+ * REQUIRED ENVIRONMENT VARIABLES:
+ * - GITHUB_CALLBACK_URL (e.g., http://localhost:3000/api/auth/github/callback for local,
+ *                              https://yourdomain.com/api/auth/github/callback for production)
+ * - NEXTAUTH_URL (used as fallback for dynamic URL construction)
  * 
- * 2. ✅ In GitHub Settings:
- *    - Go to: https://github.com/settings/developers
- *    - Select your OAuth App
- *    - Set "Authorization callback URL" to:
- *      http://localhost:3000/api/auth/github/callback
+ * Setup in GitHub OAuth App:
+ * 1. Go to: https://github.com/settings/developers
+ * 2. Select your OAuth App
+ * 3. Set "Authorization callback URL" to your GITHUB_CALLBACK_URL value
  * 
  * ============================================================================
  */
@@ -23,7 +24,9 @@ export async function GET(request: NextRequest) {
   try {
     // Get configuration from environment variables
     const clientId = process.env.GITHUB_CLIENT_ID;
-    const callbackURL = process.env.GITHUB_CALLBACK_URL || 'http://localhost:3000/api/auth/github/callback';
+    // Use GITHUB_CALLBACK_URL if set, otherwise construct from NEXTAUTH_URL or request origin
+    const callbackURL = process.env.GITHUB_CALLBACK_URL || 
+      `${process.env.NEXTAUTH_URL || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`}/api/auth/github/callback`;
     
     console.log('\n\n');
     console.log('═══════════════════════════════════════════════════════════════');
