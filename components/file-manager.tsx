@@ -58,6 +58,7 @@ import {
 import { useTheme } from "next-themes"
 import { getSessionUser } from "@/lib/auth/session"
 import { useFileManager, type FilterType, type FileItem, type UploadingFile } from "@/hooks/useFileManager"
+import Link from "next/link"
 
 // Helper function to get file icon based on type
 function getFileIcon(fileType: string): string {
@@ -256,9 +257,20 @@ function DesktopSidebar({
         </div>
       </div> */}
 
-      <div className="border-b px-6 py-4">
-        <img src="/logo.png" alt="logo" className="h-8 w-full object-contain" />
-      </div>
+       <div className="border-b px-6 py-2">
+        <Link href="/" className="flex items-center gap-0">
+          <div className="relative h-12 w-12 flex-shrink-0 rounded-full overflow-hidden pt-1.5">
+            <img
+              src="/logoicon.png"
+              alt="DropDrive Logo"
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <span className="font-semibold text-lg">DropDrive</span>
+        </Link>
+      </div> 
+      
+        
 
       <div className="flex-1 px-4 py-4">
         <div className="space-y-1">

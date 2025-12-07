@@ -23,6 +23,7 @@ import { Eye, EyeOff, Mail, Lock, Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
 import { setSessionUser } from "@/lib/auth/session"
 import { showToast } from "@/lib/toast/toastHelper"
+import Link from "next/link"
 
 function AuthNavigation() {
   const { theme, setTheme } = useTheme()
@@ -30,8 +31,9 @@ function AuthNavigation() {
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="flex h-14 md:h-16 items-center gap-2 md:gap-4 px-4 md:px-6">
-        <div className="flex items-center gap-3">
-          <div className="relative h-12 w-12 flex-shrink-0 rounded-full overflow-hidden">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-0">
+          <div className="relative h-12 w-12 flex-shrink-0 rounded-full overflow-hidden pt-1.5">
             <img
               src="/logoicon.png"
               alt="DropDrive Logo"
@@ -39,7 +41,7 @@ function AuthNavigation() {
             />
           </div>
           <span className="font-semibold text-lg">DropDrive</span>
-        </div>
+        </Link>
 
         <div className="flex-1" />
 

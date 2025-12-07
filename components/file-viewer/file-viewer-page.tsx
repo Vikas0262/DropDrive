@@ -46,6 +46,7 @@ import {
 import { useTheme } from "next-themes"
 import { getSessionUser } from "@/lib/auth/session"
 import { ShareModal } from "./share-modal"
+import Link from "next/link"
 
 // Sample file data (in a real app, this would come from an API)
 const files = [
@@ -465,7 +466,8 @@ function TopNavigation({
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="flex h-14 md:h-16 items-center gap-2 md:gap-4 px-4 md:px-6">
           <div className="flex items-center gap-0">
-          <div className="relative h-12 w-12 flex-shrink-0 rounded-full overflow-hidden pt-1.2">
+          <Link href="/" className="flex items-center gap-0">
+          <div className="relative h-12 w-12 flex-shrink-0 rounded-full overflow-hidden pt-1.5">
             <img
               src="/logoicon.png"
               alt="DropDrive Logo"
@@ -473,6 +475,7 @@ function TopNavigation({
             />
           </div>
           <span className="font-semibold text-lg">DropDrive</span>
+        </Link>
         </div>
         </div>
       </header>
@@ -483,10 +486,16 @@ function TopNavigation({
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="flex h-14 md:h-16 items-center gap-2 md:gap-4 px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-teal-500 text-white font-bold text-sm">
-            DD
+          <Link href="/" className="flex items-center gap-0">
+          <div className="relative h-12 w-12 flex-shrink-0 rounded-full overflow-hidden pt-1.5">
+            <img
+              src="/logoicon.png"
+              alt="DropDrive Logo"
+              className="h-full w-full object-cover"
+            />
           </div>
-          <span className="font-semibold text-lg hidden sm:block">DropDrive</span>
+          <span className="font-semibold text-lg">DropDrive</span>
+        </Link>
         </div>
 
         <div className="flex-1" />
