@@ -13,6 +13,7 @@ const config: Config = {
   theme: {
   	extend: {
   		colors: {
+  			// Standard Tailwind/shadcn compatibility
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -37,7 +38,8 @@ const config: Config = {
   			},
   			accent: {
   				DEFAULT: 'hsl(var(--accent))',
-  				foreground: 'hsl(var(--accent-foreground))'
+  				foreground: 'hsl(var(--accent-foreground))',
+  				hover: 'hsl(var(--accent-hover))'
   			},
   			destructive: {
   				DEFAULT: 'hsl(var(--destructive))',
@@ -62,7 +64,28 @@ const config: Config = {
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
-  			}
+  			},
+  			// Custom color system with direct access
+  			'bg-main': 'hsl(var(--bg-main))',
+  			'bg-secondary': 'hsl(var(--bg-secondary))',
+  			'bg-tertiary': 'hsl(var(--bg-tertiary))',
+  			'text-primary': 'hsl(var(--text-primary))',
+  			'text-secondary': 'hsl(var(--text-secondary))',
+  			'text-disabled': 'hsl(var(--text-disabled))',
+  			'border-default': 'hsl(var(--border-default))',
+  			'border-light': 'hsl(var(--border-light))',
+  			'btn-primary': {
+  				DEFAULT: 'hsl(var(--btn-primary-bg))',
+  				foreground: 'hsl(var(--btn-primary-text))'
+  			},
+  			'btn-secondary': {
+  				DEFAULT: 'hsl(var(--btn-secondary-bg))',
+  				foreground: 'hsl(var(--btn-secondary-text))'
+  			},
+  			success: 'hsl(var(--success))',
+  			warning: 'hsl(var(--warning))',
+  			error: 'hsl(var(--error))',
+  			info: 'hsl(var(--info))'
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

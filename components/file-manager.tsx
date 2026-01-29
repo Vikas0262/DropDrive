@@ -250,7 +250,7 @@ function DesktopSidebar({
     <div className="hidden md:flex w-64 flex-col border-r bg-background">
       {/* <div className="border-b px-6 py-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-teal-500 text-white font-bold text-sm">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
             DD
           </div>
           <span className="font-semibold text-lg">DropDrive</span>
@@ -447,7 +447,7 @@ function TopNavigation({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 md:h-9 md:w-9 rounded-full">
-                <Avatar className="h-7 w-7 md:h-8 md:w-8 bg-gradient-to-br from-blue-500 to-teal-500">
+                <Avatar className="h-7 w-7 md:h-8 md:w-8 bg-primary">
                   {profilePicture && <AvatarImage src={profilePicture} alt={user?.firstName} />}
                   <AvatarFallback className="text-white font-semibold text-sm">
                     {getInitials(user?.firstName, user?.lastName)}
@@ -640,10 +640,10 @@ function FileCard({
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             {file.starred && (
-              <Star className="h-3 w-3 md:h-4 md:w-4 fill-yellow-400 text-yellow-400" />
+              <Star className="h-3 w-3 md:h-4 md:w-4 fill-warning text-warning" />
             )}
             {file.sharedWith > 0 && (
-              <Users className="h-3 w-3 md:h-4 md:w-4 text-blue-500" />
+              <Users className="h-3 w-3 md:h-4 md:w-4 text-info" />
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -788,10 +788,10 @@ function FileCard({
             <div className="text-2xl md:text-3xl">{getFileIcon(file.fileType)}</div>
             <div className="flex items-center gap-1">
               {file.starred && (
-                <Star className="h-3 w-3 md:h-4 md:w-4 fill-yellow-400 text-yellow-400" />
+                <Star className="h-3 w-3 md:h-4 md:w-4 fill-warning text-warning" />
               )}
               {file.sharedWith > 0 && (
-                <Users className="h-3 w-3 md:h-4 md:w-4 text-blue-500" />
+                <Users className="h-3 w-3 md:h-4 md:w-4 text-info" />
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

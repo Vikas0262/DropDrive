@@ -1,12 +1,18 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Outfit } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SessionProvider } from "@/components/providers/session-provider"
 import { Toaster } from "sonner"
+import { OfflineIndicator } from "@/components/offline-indicator"
+import { OfflineInit } from "@/lib/offline/init"
 
-const inter = Inter({ subsets: ["latin"] })
+const outfit = Outfit({ 
+  subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-outfit"
+})
 
 export const metadata: Metadata = {
   title: "DropDrive - Modern File Manager",
@@ -20,11 +26,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={outfit.className}>
         <SessionProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <OfflineInit />
             {children}
             <Toaster position="top-right" richColors />
+            <OfflineIndicator />
           </ThemeProvider>
         </SessionProvider>
       </body>

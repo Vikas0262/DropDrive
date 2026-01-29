@@ -327,13 +327,13 @@ export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
                       disabled={isLoadingShare}
                     >
                       {linkCopied ? (
-                        <Check className="h-4 w-4 text-green-500" />
+                        <Check className="h-4 w-4 text-success" />
                       ) : (
                         <Copy className="h-4 w-4" />
                       )}
                     </Button>
                   </div>
-                  {linkCopied && <p className="text-sm text-green-600">Link copied to clipboard!</p>}
+                  {linkCopied && <p className="text-sm text-success">Link copied to clipboard!</p>}
                 </div>
 
                 {/* Link Settings */}
