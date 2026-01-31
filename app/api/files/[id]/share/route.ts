@@ -34,29 +34,23 @@ export async function GET(
 
     const file = await File.findById(id)
     if (!file) {
-      // Return demo data for development
-      if (process.env.NODE_ENV !== 'production') {
-        return NextResponse.json(
-          {
-            id: id,
-            fileName: 'sample-file',
-            isPublic: false,
-            publicSlug: null,
-            publicLink: null,
-            publicLinkExpiry: null,
-          },
-          { status: 200 }
-        )
-      }
-
       return NextResponse.json(
-        { error: 'File not found or unauthorized' },
+        { error: 'File not found' },
         { status: 404 }
       )
     }
 
     // For demo, skip ownership check
     // In production, verify: if (file.userId.toString() !== userId)
+
+    // Check if link has expired and auto-disable if needed
+    if (file.isPublic && file.publicLinkExpiry && new Date() > file.publicLinkExpiry) {
+      console.log(`File ${file._id} link expired, auto-disabling`);
+      file.isPublic = false;
+      await file.save();
+    }
+
+    console.log(`File ${file._id} share status: isPublic=${file.isPublic}, slug=${file.publicSlug}, expiry=${file.publicLinkExpiry}`);
 
     return NextResponse.json(
       {
@@ -68,6 +62,7 @@ export async function GET(
           ? `/shared/${file.publicSlug}`
           : null,
         publicLinkExpiry: file.publicLinkExpiry || null,
+        publicLinkPermission: file.publicLinkPermission || 'full-access',
       },
       { status: 200 }
     )
@@ -120,7 +115,7 @@ export async function PATCH(
     // In production, verify: if (file.userId.toString() !== userId)
 
     const body = await request.json();
-    const { isPublic, expiryDays } = body;
+    const { isPublic, expiryDays, permission } = body;
 
     if (typeof isPublic !== 'boolean') {
       return NextResponse.json(
@@ -143,18 +138,40 @@ export async function PATCH(
       file.publicSlug = newSlug;
     }
 
+    // IMPORTANT: Set isPublic first to ensure it persists
+    file.isPublic = isPublic;
+
     // Set expiry date if specified
-    if (isPublic && expiryDays) {
+    if (isPublic && expiryDays && expiryDays !== 'never') {
       const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + expiryDays);
+      expiryDate.setDate(expiryDate.getDate() + parseInt(expiryDays));
       file.publicLinkExpiry = expiryDate;
     } else if (isPublic) {
       // If enabling without expiry, clear any existing expiry
       file.publicLinkExpiry = null;
+    } else if (!isPublic) {
+      // If disabling, keep expiry data for when user re-enables
+      // This way they don't lose their settings
     }
 
-    file.isPublic = isPublic;
+    // Set permission if specified
+    if (isPublic && permission) {
+      if (!['secure-view', 'full-access'].includes(permission)) {
+        return NextResponse.json(
+          { error: 'Invalid permission type' },
+          { status: 400 }
+        );
+      }
+      file.publicLinkPermission = permission;
+    } else if (isPublic && !file.publicLinkPermission) {
+      // Default to full-access if not set
+      file.publicLinkPermission = 'full-access';
+    }
+
+    // Save to database - this is critical!
     await file.save();
+    
+    console.log(`File ${file._id} sharing updated: isPublic=${file.isPublic}, expiry=${file.publicLinkExpiry}`);
 
     return NextResponse.json(
       {
@@ -165,6 +182,7 @@ export async function PATCH(
           ? `/shared/${file.publicSlug}`
           : null,
         publicLinkExpiry: file.publicLinkExpiry || null,
+        publicLinkPermission: file.publicLinkPermission || 'full-access',
       },
       { status: 200 }
     );

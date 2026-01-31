@@ -133,7 +133,7 @@ function ProfileNavigation({ onNavigate, onLogout }: ProfilePageProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 md:h-9 md:w-9 rounded-full">
-                <Avatar className="h-7 w-7 md:h-8 md:w-8 bg-gradient-to-br from-blue-500 to-teal-500">
+                <Avatar className="h-7 w-7 md:h-8 md:w-8 bg-primary">
                   {profilePicture && !isLoadingImage && (
                     <AvatarImage src={profilePicture} alt={user?.firstName} />
                   )}
@@ -145,7 +145,7 @@ function ProfileNavigation({ onNavigate, onLogout }: ProfilePageProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <div className="flex items-center justify-start gap-2 p-2">
-                <Avatar className="h-10 w-10 bg-gradient-to-br from-blue-500 to-teal-500">
+                <Avatar className="h-10 w-10 bg-primary">
                   {profilePicture && !isLoadingImage && (
                     <AvatarImage src={profilePicture} alt={user?.firstName} />
                   )}
@@ -374,7 +374,7 @@ export function ProfilePage({ onNavigate, onLogout }: ProfilePageProps) {
                     disabled={!isEditing}
                     className={`relative group ${isEditing ? "cursor-pointer" : "cursor-default"}`}
                   >
-                    <Avatar className="h-32 w-32 bg-gradient-to-br from-blue-500 to-teal-500">
+                    <Avatar className="h-32 w-32 bg-primary">
                       {profilePicturePreview && (
                         <AvatarImage src={profilePicturePreview} alt={formData.firstName} />
                       )}

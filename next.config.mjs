@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+output: 'standalone',  // REQUIRED for Docker/ECS
+
   typescript: {
     ignoreBuildErrors: true,
   },

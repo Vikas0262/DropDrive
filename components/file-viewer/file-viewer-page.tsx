@@ -243,7 +243,7 @@ function VideoPlayer({ fileUrl, fileName }: { fileUrl: string; fileName: string 
             max={duration || 0}
             value={currentTime}
             onChange={(e) => handleSeek(Number(e.target.value))}
-            className="flex-1 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-white"
+            className="flex-1 h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
             style={{
               background: `linear-gradient(to right, white 0%, white ${
                 (currentTime / duration) * 100
@@ -290,7 +290,7 @@ function VideoPlayer({ fileUrl, fileName }: { fileUrl: string; fileName: string 
                 step="0.1"
                 value={isMuted ? 0 : volume}
                 onChange={(e) => handleVolumeChange(Number(e.target.value))}
-                className="w-16 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-white hidden sm:block"
+                className="w-16 h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-primary hidden sm:block"
               />
             </div>
 
@@ -328,10 +328,10 @@ interface FileViewerPageProps {
 function FilePreview({ file }: { file: any }) {
   const getFileIcon = (type: string) => {
     const lowerType = type.toLowerCase()
-    if (lowerType.includes("pdf")) return <FileText className="h-16 w-16 text-red-500" />
-    if (lowerType.includes("image")) return <ImageIcon className="h-16 w-16 text-green-500" />
-    if (lowerType.includes("video")) return <Video className="h-16 w-16 text-purple-500" />
-    if (lowerType.includes("audio")) return <Music className="h-16 w-16 text-blue-500" />
+    if (lowerType.includes("pdf")) return <FileText className="h-16 w-16 text-destructive" />
+    if (lowerType.includes("image")) return <ImageIcon className="h-16 w-16 text-success" />
+    if (lowerType.includes("video")) return <Video className="h-16 w-16 text-primary" />
+    if (lowerType.includes("audio")) return <Music className="h-16 w-16 text-info" />
     if (lowerType.includes("zip") || lowerType.includes("rar") || lowerType.includes("7z")) {
       return <Archive className="h-16 w-16 text-orange-500" />
     }
@@ -341,16 +341,16 @@ function FilePreview({ file }: { file: any }) {
       lowerType.includes("typescript") ||
       lowerType.includes("json")
     ) {
-      return <Code className="h-16 w-16 text-gray-500" />
+      return <Code className="h-16 w-16 text-muted-foreground" />
     }
-    return <FileText className="h-16 w-16 text-gray-500" />
+    return <FileText className="h-16 w-16 text-muted-foreground" />
   }
 
   const fileType = file.fileType?.toLowerCase() || "file"
 
   if (fileType.includes("pdf")) {
     return (
-      <div className="w-full h-96 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+      <div className="w-full h-96 bg-muted rounded-lg flex items-center justify-center">
         <div className="text-center space-y-4">
           {getFileIcon(fileType)}
           <div>
@@ -368,7 +368,7 @@ function FilePreview({ file }: { file: any }) {
 
   if (fileType.includes("image")) {
     return (
-      <div className="w-full h-96 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden">
+      <div className="w-full h-96 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
         <img
           src={file.fileUrl}
           alt={file.fileName}
@@ -382,7 +382,7 @@ function FilePreview({ file }: { file: any }) {
   }
 
   return (
-    <div className="w-full h-96 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+    <div className="w-full h-96 bg-muted rounded-lg flex items-center justify-center">
       <div className="text-center space-y-4">
         {getFileIcon(fileType)}
         <div>
@@ -670,7 +670,7 @@ export function FileViewerPage({ fileId, onNavigate, onLogout }: FileViewerPageP
                 Share
               </Button>
               <Button variant="outline" size="icon" onClick={handleStarToggle}>
-                <Star className={`h-4 w-4 ${isStarred ? "fill-yellow-400 text-yellow-400" : ""}`} />
+                <Star className={`h-4 w-4 ${isStarred ? "fill-warning text-warning" : ""}`} />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -734,7 +734,7 @@ export function FileViewerPage({ fileId, onNavigate, onLogout }: FileViewerPageP
                 {file.sharedWith && file.sharedWith.length > 0 ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm">
-                      <Users className="h-4 w-4 text-blue-500" />
+                      <Users className="h-4 w-4 text-info" />
                       <span>Shared with {file.sharedWith.length} people</span>
                     </div>
                     <ScrollArea className="h-20">

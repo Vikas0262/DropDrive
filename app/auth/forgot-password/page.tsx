@@ -104,8 +104,8 @@ export default function ForgotPasswordPage() {
           <div className="w-full max-w-md">
             <Card className="shadow-lg">
               <CardHeader className="text-center pb-4">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-                  <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
+                  <CheckCircle className="h-8 w-8 text-success" />
                 </div>
                 <CardTitle className="text-2xl font-semibold">Check your email</CardTitle>
                 <CardDescription>
@@ -155,7 +155,7 @@ export default function ForgotPasswordPage() {
             </CardHeader>
             <CardContent suppressHydrationWarning>
               {error && (
-                <div className="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100 rounded-md text-sm">
+                <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-md text-sm">
                   {error}
                 </div>
               )}

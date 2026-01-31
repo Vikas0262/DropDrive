@@ -49,6 +49,10 @@ export async function GET(
 
     // Check if link has expired
     if (file.publicLinkExpiry && new Date() > file.publicLinkExpiry) {
+      // Auto-disable the public link
+      file.isPublic = false;
+      await file.save();
+      
       return NextResponse.json(
         { error: 'This share link has expired' },
         { status: 403 }
@@ -66,6 +70,7 @@ export async function GET(
         uploadTime: file.uploadTime,
         description: file.description || '',
         isFolder: file.isFolder,
+        permission: file.publicLinkPermission || 'full-access',
       },
       { status: 200 }
     );

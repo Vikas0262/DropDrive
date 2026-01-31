@@ -136,7 +136,7 @@ function ResetPasswordContent() {
             <Card className="shadow-lg">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+                  <p className="text-destructive mb-4">{error}</p>
                   <Button onClick={() => router.push("/auth/forgot-password")} className="w-full">
                     Request New Reset Link
                   </Button>
@@ -159,9 +159,9 @@ function ResetPasswordContent() {
             <Card className="shadow-lg">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
                     <svg
-                      className="h-8 w-8 text-green-600 dark:text-green-400"
+                      className="h-8 w-8 text-success"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -203,7 +203,7 @@ function ResetPasswordContent() {
             </CardHeader>
             <CardContent suppressHydrationWarning>
               {error && (
-                <div className="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100 rounded-md text-sm">
+                <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-md text-sm">
                   {error}
                 </div>
               )}

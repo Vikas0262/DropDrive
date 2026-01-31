@@ -52,6 +52,15 @@ export async function GET(request: NextRequest) {
 
       case 'recent':
         query.userId = new mongoose.Types.ObjectId(userId);
+        // Filter to show only today's files
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        query.lastModified = {
+          $gte: today,
+          $lt: tomorrow,
+        };
         break;
 
       case 'starred':

@@ -23,6 +23,7 @@ interface IFile extends Document {
   publicSlug?: string; // Unique slug for public sharing (e.g., "abc123def")
   isPublic?: boolean; // Toggle for public access
   publicLinkExpiry?: Date; // Optional expiration date for public link
+  publicLinkPermission?: 'secure-view' | 'full-access'; // Permission type for public link
   createdAt: Date;
   updatedAt: Date;
 }
@@ -124,6 +125,11 @@ const fileSchema = new Schema<IFile>(
     publicLinkExpiry: {
       type: Date,
       default: null,
+    },
+    publicLinkPermission: {
+      type: String,
+      enum: ['secure-view', 'full-access'],
+      default: 'full-access',
     },
   },
   {
