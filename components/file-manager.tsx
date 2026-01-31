@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Card, CardContent } from "@/components/ui/card"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { NotificationDropdown } from "@/components/notification-dropdown"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -440,9 +441,7 @@ function TopNavigation({
             <span className="sr-only">Toggle theme</span>
           </Button>
 
-          <Button variant="ghost" size="icon" className="h-8 w-8 md:h-9 md:w-9">
-            <Bell className="h-4 w-4" />
-          </Button>
+          <NotificationDropdown />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

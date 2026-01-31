@@ -48,6 +48,15 @@ import { getSessionUser } from "@/lib/auth/session"
 import { ShareModal } from "./share-modal"
 import Link from "next/link"
 
+// Utility function to format file size
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i]
+}
+
 // Sample file data (in a real app, this would come from an API)
 const files = [
   {
@@ -560,6 +569,7 @@ export function FileViewerPage({ fileId, onNavigate, onLogout }: FileViewerPageP
   const [showShareModal, setShowShareModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const user = getSessionUser()
 
   useEffect(() => {
     const fetchFile = async () => {
@@ -712,11 +722,11 @@ export function FileViewerPage({ fileId, onNavigate, onLogout }: FileViewerPageP
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Size</span>
-                    <span>{file.fileSize}</span>
+                    <span>{typeof file.fileSize === 'number' ? formatFileSize(file.fileSize) : file.fileSize}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Owner</span>
-                    <span>You</span>
+                    <span>{file.owner || user?.firstName + ' ' + user?.lastName || 'You'}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Uploaded</span>
@@ -739,11 +749,16 @@ export function FileViewerPage({ fileId, onNavigate, onLogout }: FileViewerPageP
                     </div>
                     <ScrollArea className="h-20">
                       <div className="space-y-1">
-                        {file.sharedWith.map((email: string, idx: number) => (
-                          <div key={idx} className="text-xs text-muted-foreground">
-                            {email}
-                          </div>
-                        ))}
+                        {file.sharedWith.map((sharedUser: any, idx: number) => {
+                          const email = typeof sharedUser === 'string' ? sharedUser : (sharedUser.email || sharedUser.userEmail)
+                          const userName = typeof sharedUser === 'string' ? email.split('@')[0] : (sharedUser.name || sharedUser.userName || email.split('@')[0])
+                          return (
+                            <div key={idx} className="text-xs">
+                              <div className="font-medium text-foreground">{userName}</div>
+                              <div className="text-muted-foreground">{email}</div>
+                            </div>
+                          )
+                        })}
                       </div>
                     </ScrollArea>
                   </div>

@@ -7,6 +7,7 @@ import { getSessionUser } from "@/lib/auth/session"
 import { useEffect, useState } from "react"
 import { Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
+import { NotificationDropdown } from "@/components/notification-dropdown"
 
 export function Navbar() {
   const router = useRouter()
@@ -76,6 +77,9 @@ export function Navbar() {
               </Link>
             </>
           ) : null}
+          
+          {/* Notification Icon - only show when user is logged in */}
+          {!isLoading && user && <NotificationDropdown />}
           
           {/* Theme Toggle */}
           <Button

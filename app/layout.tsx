@@ -5,6 +5,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SessionProvider } from "@/components/providers/session-provider"
 import { Toaster } from "sonner"
+import { Toaster as ShadcnToaster } from "@/components/ui/toaster"
 import { OfflineIndicator } from "@/components/offline-indicator"
 import { OfflineInit } from "@/lib/offline/init"
 
@@ -32,6 +33,7 @@ export default function RootLayout({
             <OfflineInit />
             {children}
             <Toaster position="top-right" richColors />
+            <ShadcnToaster />
             <OfflineIndicator />
           </ThemeProvider>
         </SessionProvider>

@@ -106,6 +106,11 @@ export function AnalyticsView({ fileId, userId }: AnalyticsViewProps) {
   }
 
   const { summary, sessions } = data
+  
+  // Ensure arrays are always defined
+  const viewsByDevice = summary.viewsByDevice || []
+  const topBrowsers = summary.topBrowsers || []
+  const viewsByLocation = summary.viewsByLocation || []
 
   const getDeviceIcon = (deviceType: DeviceType) => {
     switch (deviceType) {
@@ -290,7 +295,7 @@ export function AnalyticsView({ fileId, userId }: AnalyticsViewProps) {
                 <CardDescription>Views by device category</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {summary.viewsByDevice.map((item) => (
+                {viewsByDevice.map((item) => (
                   <div key={item.deviceType} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {getDeviceIcon(item.deviceType)}
@@ -299,7 +304,7 @@ export function AnalyticsView({ fileId, userId }: AnalyticsViewProps) {
                     <Badge variant="secondary">{item.count}</Badge>
                   </div>
                 ))}
-                {summary.viewsByDevice.length === 0 && (
+                {viewsByDevice.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     No device data yet
                   </p>
@@ -314,13 +319,13 @@ export function AnalyticsView({ fileId, userId }: AnalyticsViewProps) {
                 <CardDescription>Most used web browsers</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {summary.topBrowsers.map((item) => (
+                {topBrowsers.map((item) => (
                   <div key={item.browserName} className="flex items-center justify-between">
                     <span className="text-sm">{item.browserName}</span>
                     <Badge variant="secondary">{item.count}</Badge>
                   </div>
                 ))}
-                {summary.topBrowsers.length === 0 && (
+                {topBrowsers.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     No browser data yet
                   </p>
@@ -335,7 +340,7 @@ export function AnalyticsView({ fileId, userId }: AnalyticsViewProps) {
                 <CardDescription>Views by country</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {summary.viewsByLocation.map((item) => (
+                {viewsByLocation.map((item) => (
                   <div key={item.country} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Globe className="h-4 w-4" />
@@ -344,7 +349,7 @@ export function AnalyticsView({ fileId, userId }: AnalyticsViewProps) {
                     <Badge variant="secondary">{item.count}</Badge>
                   </div>
                 ))}
-                {summary.viewsByLocation.length === 0 && (
+                {viewsByLocation.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     No location data available
                   </p>

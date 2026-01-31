@@ -17,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Globe, Copy, Check, X, Eye, Edit, UserPlus, Link, Send, AlertCircle, BarChart3 } from "lucide-react"
 import { AnalyticsView } from "./analytics-view"
+import { useToast } from "@/components/ui/use-toast"
 
 interface ShareModalProps {
   isOpen: boolean
@@ -34,13 +35,14 @@ interface ShareStatus {
 
 export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
   const user = getSessionUser()
+  const { toast } = useToast()
   const [shareStatus, setShareStatus] = useState<ShareStatus | null>(null)
   const [publicLinkEnabled, setPublicLinkEnabled] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
   const [emailInput, setEmailInput] = useState("")
   const [emailMessage, setEmailMessage] = useState("")
   const [permission, setPermission] = useState("view")
-  const [sharedUsers, setSharedUsers] = useState(file.sharedWith || [])
+  const [sharedUsers, setSharedUsers] = useState<any[]>(Array.isArray(file.sharedWith) ? file.sharedWith : [])
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingShare, setIsLoadingShare] = useState(false)
   const [shareError, setShareError] = useState<string | null>(null)
@@ -211,6 +213,7 @@ export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
           data: {
             userEmail: emailInput.trim(),
             permission: permission,
+            message: emailMessage.trim() || undefined, // Include message if provided
           },
         }),
       })
@@ -224,17 +227,29 @@ export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
         setEmailInput("")
         setEmailMessage("")
         
-        // Show success message
-        alert(`File successfully shared with ${emailInput.trim()}!`)
+        // Show success toast
+        toast({
+          title: "File shared successfully!",
+          description: `${file?.fileName || 'File'} has been shared with ${emailInput.trim()}`,
+          variant: "default",
+        })
       } else {
         const error = await response.json()
         setShareError(error.error || 'Failed to share file')
-        alert(`Error: ${error.error || 'Failed to share file'}`)
+        toast({
+          title: "Failed to share file",
+          description: error.error || 'An error occurred while sharing the file',
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error('Error sharing file:', error)
       setShareError('Failed to share file')
-      alert('Error: Failed to share file')
+      toast({
+        title: "Error",
+        description: 'Failed to share file. Please try again.',
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
@@ -385,31 +400,34 @@ export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
                   <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                        <AvatarFallback>JD</AvatarFallback>
+                        <AvatarImage src={user?.profilePicture} />
+                        <AvatarFallback>
+                          {user?.firstName?.[0]?.toUpperCase()}{user?.lastName?.[0]?.toUpperCase()}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="text-sm font-medium">{file.owner}</p>
-                        <p className="text-xs text-muted-foreground">john.doe@example.com</p>
+                        <p className="text-sm font-medium">{file.owner || `${user?.firstName} ${user?.lastName}` || 'You'}</p>
+                        <p className="text-xs text-muted-foreground">{user?.email || 'Owner'}</p>
                       </div>
                     </div>
                     <Badge variant="secondary">Owner</Badge>
                   </div>
 
                   {/* Shared Users */}
-                  {sharedUsers.map((user: any) => {
-                    const email = typeof user === 'string' ? user : user.email
-                    const userPermission = typeof user === 'string' ? 'view' : user.permission
+                  {Array.isArray(sharedUsers) && sharedUsers.map((sharedUser: any) => {
+                    const email = typeof sharedUser === 'string' ? sharedUser : (sharedUser.email || sharedUser.userEmail)
+                    const userName = typeof sharedUser === 'string' ? email.split('@')[0] : (sharedUser.name || sharedUser.userName || email.split('@')[0])
+                    const userPermission = typeof sharedUser === 'string' ? 'view' : (sharedUser.permission || 'view')
                     
                     return (
                       <div key={email} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
-                            <AvatarFallback>{email[0].toUpperCase()}</AvatarFallback>
+                            <AvatarFallback>{email?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                           </Avatar>
-                          <div>
-                            <p className="text-sm font-medium">{email}</p>
-                            <p className="text-xs text-muted-foreground">Can {userPermission}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate">{userName}</p>
+                            <p className="text-xs text-muted-foreground truncate">{email}</p>
                           </div>
                         </div>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleRemoveUser(email)}>
@@ -419,7 +437,7 @@ export function ShareModal({ isOpen, onClose, file }: ShareModalProps) {
                     )
                   })}
 
-                  {sharedUsers.length === 0 && (
+                  {Array.isArray(sharedUsers) && sharedUsers.length === 0 && (
                     <div className="text-center py-8 text-muted-foreground">
                       <UserPlus className="h-8 w-8 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">No one else has access yet</p>

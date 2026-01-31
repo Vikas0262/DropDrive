@@ -34,11 +34,11 @@ export function LandingPage() {
                 Start Uploading
               </Button>
             </Link>
-            <a href="#features">
+            {/* <a href="#features">
               <Button size="lg" variant="ghost" className="text-primary hover:text-accent-hover px-8 py-6 text-base font-semibold w-full sm:w-auto">
                 Learn More
               </Button>
-            </a>
+            </a> */}
           </div>
         </div>
       </section>
