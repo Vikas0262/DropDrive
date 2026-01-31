@@ -252,6 +252,32 @@ export async function PATCH(request: NextRequest) {
             permission: data.permission,
           });
           await file.save();
+
+          // Create notification for the shared user
+          try {
+            const Notification = (await import('@/models/Notification')).default;
+            const sender = await User.findById(userId);
+            
+            if (sender) {
+              await Notification.create({
+                recipientId: sharedUser._id,
+                senderId: sender._id,
+                senderName: `${sender.firstName} ${sender.lastName}`,
+                senderEmail: sender.email,
+                senderProfilePicture: sender.profilePicture,
+                fileId: file._id,
+                fileName: file.fileName,
+                message: data.message || null, // Optional message from sender
+                type: 'file_shared',
+                isRead: false,
+              });
+              
+              console.log(`[Notification] Created notification for ${sharedUser.email} about file "${file.fileName}"`);
+            }
+          } catch (notifError) {
+            console.error('[Notification] Failed to create notification:', notifError);
+            // Don't fail the share operation if notification fails
+          }
         }
 
         return NextResponse.json(
