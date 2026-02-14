@@ -8,6 +8,7 @@ import { Toaster } from "sonner"
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster"
 import { OfflineIndicator } from "@/components/offline-indicator"
 import { OfflineInit } from "@/lib/offline/init"
+import { Analytics } from "@vercel/analytics/next"
 
 const outfit = Outfit({ 
   subsets: ["latin"],
@@ -37,6 +38,7 @@ export default function RootLayout({
             <OfflineIndicator />
           </ThemeProvider>
         </SessionProvider>
+        <Analytics />
       </body>
     </html>
   )
